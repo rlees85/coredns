@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/coredns/caddy"
 	"github.com/coredns/coredns/plugin/pkg/reuseport"
@@ -49,12 +50,43 @@ func (s *ServerTLS) Serve(l net.Listener) error {
 		l = tls.NewListener(l, s.tlsConfig)
 	}
 
+	var (
+		TLSIdleTimeout  time.Duration
+		TLSReadTimeout  time.Duration
+		TLSWriteTimeout time.Duration
+	)
+
+	if s.idleTimeout == time.Duration(0) {
+		TLSIdleTimeout = DefaultTLSIdleTimeout
+	} else {
+		TLSIdleTimeout = s.idleTimeout
+	}
+	if s.readTimeout == time.Duration(0) {
+		TLSReadTimeout = DefaultTLSReadTimeout
+	} else {
+		TLSReadTimeout = s.readTimeout
+	}
+	if s.readTimeout == time.Duration(0) {
+		TLSWriteTimeout = DefaultTLSWriteTimeout
+	} else {
+		TLSWriteTimeout = s.writeTimeout
+	}
+
 	// Only fill out the TCP server for this one.
-	s.server[tcp] = &dns.Server{Listener: l, Net: "tcp-tls", Handler: dns.HandlerFunc(func(w dns.ResponseWriter, r *dns.Msg) {
-		ctx := context.WithValue(context.Background(), Key{}, s.Server)
-		ctx = context.WithValue(ctx, LoopKey{}, 0)
-		s.ServeDNS(ctx, w, r)
-	})}
+	s.server[tcp] = &dns.Server{Listener: l,
+		Net:           "tcp-tls",
+		MaxTCPQueries: TLSMaxQueries,
+		ReadTimeout:   TLSReadTimeout,
+		WriteTimeout:  TLSWriteTimeout,
+		IdleTimeout: func() time.Duration {
+			return TLSIdleTimeout
+		},
+		Handler: dns.HandlerFunc(func(w dns.ResponseWriter, r *dns.Msg) {
+			ctx := context.WithValue(context.Background(), Key{}, s.Server)
+			ctx = context.WithValue(ctx, LoopKey{}, 0)
+			s.ServeDNS(ctx, w, r)
+		})}
+
 	s.m.Unlock()
 
 	return s.server[tcp].ActivateAndServe()
@@ -87,3 +119,7 @@ func (s *ServerTLS) OnStartupComplete() {
 		fmt.Print(out)
 	}
 }
+
+const (
+	tlsMaxQueries = -1
+)

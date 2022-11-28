@@ -44,6 +44,9 @@ type Server struct {
 	debug        bool                 // disable recover()
 	stacktrace   bool                 // enable stacktrace in recover error log
 	classChaos   bool                 // allow non-INET class queries
+	idleTimeout  time.Duration        // Idle timeout for TCP
+	readTimeout  time.Duration        // Read timeout for TCP
+	writeTimeout time.Duration        // Write timeout for TCP
 
 	tsigSecret map[string]string
 }
@@ -60,6 +63,9 @@ func NewServer(addr string, group []*Config) (*Server, error) {
 		Addr:         addr,
 		zones:        make(map[string][]*Config),
 		graceTimeout: 5 * time.Second,
+		idleTimeout:  10 * time.Second,
+		readTimeout:  3 * time.Second,
+		writeTimeout: 5 * time.Second,
 		tsigSecret:   make(map[string]string),
 	}
 
@@ -80,6 +86,18 @@ func NewServer(addr string, group []*Config) (*Server, error) {
 
 		// append the config to the zone's configs
 		s.zones[site.Zone] = append(s.zones[site.Zone], site)
+
+		// set timeouts
+		for key, timeout := range site.Timeouts {
+			switch key {
+			case "idle":
+				s.idleTimeout = timeout
+			case "read":
+				s.readTimeout = timeout
+			case "write":
+				s.writeTimeout = timeout
+			}
+		}
 
 		// copy tsig secrets
 		for key, secret := range site.TsigSecret {
@@ -130,11 +148,22 @@ var _ caddy.GracefulServer = &Server{}
 // This implements caddy.TCPServer interface.
 func (s *Server) Serve(l net.Listener) error {
 	s.m.Lock()
-	s.server[tcp] = &dns.Server{Listener: l, Net: "tcp", Handler: dns.HandlerFunc(func(w dns.ResponseWriter, r *dns.Msg) {
-		ctx := context.WithValue(context.Background(), Key{}, s)
-		ctx = context.WithValue(ctx, LoopKey{}, 0)
-		s.ServeDNS(ctx, w, r)
-	}), TsigSecret: s.tsigSecret}
+
+	s.server[tcp] = &dns.Server{Listener: l,
+		Net:           "tcp",
+		TsigSecret:    s.tsigSecret,
+		MaxTCPQueries: tcpMaxQueries,
+		ReadTimeout:   s.readTimeout,
+		WriteTimeout:  s.writeTimeout,
+		IdleTimeout: func() time.Duration {
+			return s.idleTimeout
+		},
+		Handler: dns.HandlerFunc(func(w dns.ResponseWriter, r *dns.Msg) {
+			ctx := context.WithValue(context.Background(), Key{}, s)
+			ctx = context.WithValue(ctx, LoopKey{}, 0)
+			s.ServeDNS(ctx, w, r)
+		})}
+
 	s.m.Unlock()
 
 	return s.server[tcp].ActivateAndServe()
@@ -404,6 +433,8 @@ func errorAndMetricsFunc(server string, w dns.ResponseWriter, r *dns.Msg, rc int
 const (
 	tcp = 0
 	udp = 1
+
+	tcpMaxQueries = -1
 )
 
 type (
