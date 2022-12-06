@@ -6,6 +6,17 @@ import (
 	"time"
 )
 
+// NewTimeoutsConfigFromArgs returns a map of durations keyed by strings based
+// upon the passed in list of arguments. Typically these come straight from the
+// Corefile.
+// one arg: read timeout
+//   - only sets up the read timeout. Defaults will be used for write/idle timeouts.
+//
+// two args: read timeout, write timeout
+//   - sets up the read and write timeouts. Default will be used for idle timeout.
+//
+// three args: read timeout, write timeout, idle timeout
+//   - sets read write and idle timeouts.
 func NewTimeoutsConfigFromArgs(args ...string) (map[string]time.Duration, error) {
 	c := make(map[string]time.Duration)
 
