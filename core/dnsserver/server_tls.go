@@ -50,36 +50,14 @@ func (s *ServerTLS) Serve(l net.Listener) error {
 		l = tls.NewListener(l, s.tlsConfig)
 	}
 
-	var (
-		TLSIdleTimeout  time.Duration
-		TLSReadTimeout  time.Duration
-		TLSWriteTimeout time.Duration
-	)
-
-	if s.idleTimeout == time.Duration(0) {
-		TLSIdleTimeout = DefaultTLSIdleTimeout
-	} else {
-		TLSIdleTimeout = s.idleTimeout
-	}
-	if s.readTimeout == time.Duration(0) {
-		TLSReadTimeout = DefaultTLSReadTimeout
-	} else {
-		TLSReadTimeout = s.readTimeout
-	}
-	if s.readTimeout == time.Duration(0) {
-		TLSWriteTimeout = DefaultTLSWriteTimeout
-	} else {
-		TLSWriteTimeout = s.writeTimeout
-	}
-
 	// Only fill out the TCP server for this one.
 	s.server[tcp] = &dns.Server{Listener: l,
 		Net:           "tcp-tls",
-		MaxTCPQueries: TLSMaxQueries,
-		ReadTimeout:   TLSReadTimeout,
-		WriteTimeout:  TLSWriteTimeout,
+		MaxTCPQueries: tlsMaxQueries,
+		ReadTimeout:   s.readTimeout,
+		WriteTimeout:  s.writeTimeout,
 		IdleTimeout: func() time.Duration {
-			return TLSIdleTimeout
+			return s.idleTimeout
 		},
 		Handler: dns.HandlerFunc(func(w dns.ResponseWriter, r *dns.Msg) {
 			ctx := context.WithValue(context.Background(), Key{}, s.Server)
