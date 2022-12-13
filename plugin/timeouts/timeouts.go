@@ -20,22 +20,44 @@ func setup(c *caddy.Controller) error {
 func parseTimeouts(c *caddy.Controller) error {
 	config := dnsserver.GetConfig(c)
 
-	if config.Timeouts != nil {
-		return plugin.Error("timeouts", c.Errf("Timeouts already configured for this server instance"))
-	}
-
 	for c.Next() {
 		args := c.RemainingArgs()
-		if len(args) < 1 || len(args) > 3 {
+		if len(args) > 0 {
 			return plugin.Error("timeouts", c.ArgErr())
 		}
 
-		timeoutsConfig, err := timeouts.NewTimeoutsConfigFromArgs(args...)
-		if err != nil {
-			return err
+		b := 0
+		for c.NextBlock() {
+			block := c.Val()
+			timeoutArgs := c.RemainingArgs()
+			if len(timeoutArgs) != 1 {
+				return c.ArgErr()
+			}
+
+			timeout, err := timeouts.NewTimeoutFromArg(timeoutArgs[0])
+			if err != nil {
+				return err
+			}
+
+			switch block {
+			case "read":
+				config.ReadTimeout = timeout
+
+			case "write":
+				config.WriteTimeout = timeout
+
+			case "idle":
+				config.IdleTimeout = timeout
+
+			default:
+				return c.Errf("unknown option: '%s'", block)
+			}
+			b++
 		}
 
-		config.Timeouts = timeoutsConfig
+		if b == 0 {
+			return plugin.Error("timeouts", c.Err("timeouts block with no timeouts specified"))
+		}
 	}
 	return nil
 }

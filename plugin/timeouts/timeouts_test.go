@@ -15,15 +15,42 @@ func TestTimeouts(t *testing.T) {
 		expectedErrContent string // substring from the expected error. Empty for positive cases.
 	}{
 		// positive
-		{"timeouts 30", false, "", ""},
-		{"timeouts 30 60", false, "", ""},
-		{"timeouts 30 60 300", false, "", ""},
+		{`timeouts {
+			read 30s
+		}`, false, "", ""},
+		{`timeouts {
+			read 1m
+			write 2m
+		}`, false, "", ""},
+		{` timeouts {
+			idle 1h
+		}`, false, "", ""},
+		{`timeouts {
+			read 10
+			write 20
+			idle 60
+		}`, false, "", ""},
 		// negative
-		{"timeouts", true, "", "Wrong argument"},
-		{"timeouts 30 60 300 600", true, "", "Wrong argument"},
-		{"timeouts ten", true, "", "timeout provided 'ten' does not appear to be numeric"},
-		{"timeouts 0", true, "", "timeout provided '0' needs to be between 1 and 86400 second(s)"},
-		{"timeouts 86401", true, "", "timeout provided '86401' needs to be between 1 and 86400 second(s)"},
+		{`timeouts`, true, "", "block with no timeouts specified"},
+		{`timeouts {
+		}`, true, "", "block with no timeouts specified"},
+		{`timeouts {
+			read 10s
+			giraffe 30s
+		}`, true, "", "unknown option"},
+		{`timeouts {
+			read 10s 20s
+			write 30s
+		}`, true, "", "Wrong argument"},
+		{`timeouts {
+			write snake
+		}`, true, "", "failed to parse timeout duration"},
+		{`timeouts {
+			idle 0s
+		}`, true, "", "needs to be between"},
+		{`timeouts {
+			read 48h
+		}`, true, "", "needs to be between"},
 	}
 
 	for i, test := range tests {

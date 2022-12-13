@@ -150,7 +150,9 @@ func (h *dnsContext) MakeServers() ([]caddy.Server, error) {
 
 		// Fork TLSConfig for each encrypted connection
 		c.TLSConfig = c.firstConfigInBlock.TLSConfig.Clone()
-		c.Timeouts = c.firstConfigInBlock.Timeouts
+		c.ReadTimeout = c.firstConfigInBlock.ReadTimeout
+		c.WriteTimeout = c.firstConfigInBlock.WriteTimeout
+		c.IdleTimeout = c.firstConfigInBlock.IdleTimeout
 		c.TsigSecret = c.firstConfigInBlock.TsigSecret
 	}
 

@@ -88,15 +88,14 @@ func NewServer(addr string, group []*Config) (*Server, error) {
 		s.zones[site.Zone] = append(s.zones[site.Zone], site)
 
 		// set timeouts
-		for key, timeout := range site.Timeouts {
-			switch key {
-			case "idle":
-				s.idleTimeout = timeout
-			case "read":
-				s.readTimeout = timeout
-			case "write":
-				s.writeTimeout = timeout
-			}
+		if site.ReadTimeout != time.Duration(0) {
+			s.readTimeout = site.ReadTimeout
+		}
+		if site.WriteTimeout != time.Duration(0) {
+			s.writeTimeout = site.WriteTimeout
+		}
+		if site.IdleTimeout != time.Duration(0) {
+			s.idleTimeout = site.IdleTimeout
 		}
 
 		// copy tsig secrets

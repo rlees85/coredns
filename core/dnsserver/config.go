@@ -55,7 +55,9 @@ type Config struct {
 	TLSConfig *tls.Config
 
 	// Timeouts for TCP, TLS and HTTPS servers.
-	Timeouts map[string]time.Duration
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+	IdleTimeout  time.Duration
 
 	// TSIG secrets, [name]key.
 	TsigSecret map[string]string
