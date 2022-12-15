@@ -48,17 +48,17 @@ func TestNewTimeoutFromArg(t *testing.T) {
 	}
 
 	// Invalid timeouts
-	to, err = NewTimeoutFromArg(invalidTimeoutString)
+	_, err = NewTimeoutFromArg(invalidTimeoutString)
 	if err == nil {
 		t.Error("Attempt to create timeout with non-numeric value was successful")
 	}
 
-	to, err = NewTimeoutFromArg(invalidTimeoutLow)
+	_, err = NewTimeoutFromArg(invalidTimeoutLow)
 	if err == nil {
 		t.Error("Attempt to create timeout of less than 1 second was successful")
 	}
 
-	to, err = NewTimeoutFromArg(invalidTimeoutHigh)
+	_, err = NewTimeoutFromArg(invalidTimeoutHigh)
 	if err == nil {
 		t.Error("Attempt to create timeout of more than 1 day was successful")
 	}
