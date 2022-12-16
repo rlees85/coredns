@@ -7,11 +7,11 @@ import (
 
 func TestNewTimeoutFromArg(t *testing.T) {
 	var validSecondsTimeoutInput = "30s"
-	var validSecondsTimeoutOutput = time.Duration(30 * time.Second)
+	var validSecondsTimeoutOutput = 30 * time.Second
 	var validMinutesTimeoutInput = "2m"
-	var validMinutesTimeoutOutput = time.Duration(2 * time.Minute)
+	var validMinutesTimeoutOutput = 2 * time.Minute
 	var validIntTimeoutInput = "30"
-	var validIntTimeoutOutput = time.Duration(30 * time.Second)
+	var validIntTimeoutOutput = 30 * time.Second
 
 	var invalidTimeoutString = "twenty seconds"
 	var invalidTimeoutLow = "0"
@@ -23,7 +23,7 @@ func TestNewTimeoutFromArg(t *testing.T) {
 		t.Errorf("Failed to create timeout duration given a valid Go duration in seconds: %s", err)
 	}
 
-	if to != time.Duration(validSecondsTimeoutOutput) {
+	if to != validSecondsTimeoutOutput {
 		t.Errorf("Timeout created given a valid Go duration in seconds appears to have unexpected value: %s", to)
 	}
 
@@ -33,7 +33,7 @@ func TestNewTimeoutFromArg(t *testing.T) {
 		t.Errorf("Failed to create timeout duration given a valid Go duration in minutes: %s", err)
 	}
 
-	if to != time.Duration(validMinutesTimeoutOutput) {
+	if to != validMinutesTimeoutOutput {
 		t.Errorf("Timeout created given a valid Go duration in minutes appears to have unexpected value: %s", to)
 	}
 
@@ -43,7 +43,7 @@ func TestNewTimeoutFromArg(t *testing.T) {
 		t.Errorf("Failed to create timeout duration given a valid int: %s", err)
 	}
 
-	if to != time.Duration(validIntTimeoutOutput) {
+	if to != validIntTimeoutOutput {
 		t.Errorf("Timeout created given a valid int appears to have unexpected value: %s", to)
 	}
 

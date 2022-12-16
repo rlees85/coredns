@@ -36,7 +36,7 @@ func parseTimeouts(c *caddy.Controller) error {
 
 			timeout, err := timeouts.NewTimeoutFromArg(timeoutArgs[0])
 			if err != nil {
-				return err
+				return c.Err(err.Error())
 			}
 
 			switch block {

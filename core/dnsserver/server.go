@@ -88,13 +88,13 @@ func NewServer(addr string, group []*Config) (*Server, error) {
 		s.zones[site.Zone] = append(s.zones[site.Zone], site)
 
 		// set timeouts
-		if site.ReadTimeout != time.Duration(0) {
+		if site.ReadTimeout != 0 {
 			s.readTimeout = site.ReadTimeout
 		}
-		if site.WriteTimeout != time.Duration(0) {
+		if site.WriteTimeout != 0 {
 			s.writeTimeout = site.WriteTimeout
 		}
-		if site.IdleTimeout != time.Duration(0) {
+		if site.IdleTimeout != 0 {
 			s.idleTimeout = site.IdleTimeout
 		}
 
