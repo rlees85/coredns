@@ -28,7 +28,7 @@ func TestNewDurationFromArg(t *testing.T) {
 			want: 30 * time.Second,
 		},
 		{
-			name:    "invalid timeout",
+			name:    "invalid duration",
 			arg:     "twenty seconds",
 			wantErr: true,
 		},
