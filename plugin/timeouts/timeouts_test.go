@@ -44,7 +44,7 @@ func TestTimeouts(t *testing.T) {
 		}`, true, "", "Wrong argument"},
 		{`timeouts {
 			write snake
-		}`, true, "", "failed to parse timeout duration"},
+		}`, true, "", "failed to parse duration"},
 		{`timeouts {
 			idle 0s
 		}`, true, "", "needs to be between"},

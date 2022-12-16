@@ -1,10 +1,12 @@
 package timeouts
 
 import (
+	"time"
+
 	"github.com/coredns/caddy"
 	"github.com/coredns/coredns/core/dnsserver"
 	"github.com/coredns/coredns/plugin"
-	"github.com/coredns/coredns/plugin/pkg/timeouts"
+	"github.com/coredns/coredns/plugin/pkg/durations"
 )
 
 func init() { plugin.Register("timeouts", setup) }
@@ -34,9 +36,13 @@ func parseTimeouts(c *caddy.Controller) error {
 				return c.ArgErr()
 			}
 
-			timeout, err := timeouts.NewTimeoutFromArg(timeoutArgs[0])
+			timeout, err := durations.NewDurationFromArg(timeoutArgs[0])
 			if err != nil {
 				return c.Err(err.Error())
+			}
+
+			if timeout < (1*time.Second) || timeout > (24*time.Hour) {
+				return c.Errf("timeout provided '%s' needs to be between 1 second and 24 hours", timeout)
 			}
 
 			switch block {
